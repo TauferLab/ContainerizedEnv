@@ -78,14 +78,18 @@ Once you have your environment installed, you can run `jupyter notebook` and run
 ## Metadata interface guide  
 
 1. Navigate to your desired metadata directory
-    For knn: `cd sample_workflows/knn/metadata`  
-    For sbm: `cd sample_workflows/sbm/metadata`  
-    For rf:  `cd sample_workflows/rf/metadata`  
+    * For knn: `cd sample_workflows/knn/metadata`  
+    * For sbm: `cd sample_workflows/sbm/metadata`  
+    * For rf:  `cd sample_workflows/rf/metadata`  
 
 2. Use the metadata interface  
-    `left for Paula`  
-
- ## Additional project details
+    * Run `jupyter notebook` and select the `interface/metadata-interface.ipynb` notebook
+    * Execute the first cell to import all libraries and packages
+    * Execute the second cell to select one file or a directory with metadata files. For example, select `ContainerizedEnv/sample_workflows/knn/metadata/` 
+    * Execute the third cell to build a graph representation of the workflow
+    * Execute the fourth cell to open a visualizer where you can interact with each of the components and observe the metadata 
+ 
+## Additional project details
  
 ### Acknowledgments
 
