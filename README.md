@@ -1,4 +1,4 @@
-# Traceability and Reproducibility through Individual Containerization (TRIC) 
+# Traceability and Reproducibility through Individual Containerization (TRIC) using Singularity Technology  
 
 This repository contains a computational containerized environment that automatically creates a workflow execution's record trail and invisibly attaches it to the workflow's output, enabling data traceability and results explainability.
 
