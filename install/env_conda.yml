@@ -1,0 +1,15 @@
+name: tric
+channels:
+  - defaults
+dependencies:
+  - python=3.9.12
+  - matplotlib=3.5.1
+  - pip=22.1.2
+  - jupyter
+  - pip:
+    - ipyfilechooser
+    - networkx==2.8.4
+    - rglob==1.7
+    - sif==0.0.11 
+    - networkx_viewer==0.3.0
+prefix: /Users/opt/anaconda3/envs/tric #Make sure to change the location of where you have anaconda3 installed (e.g., /opt/anaconda3/ or /home/anaconda3/)

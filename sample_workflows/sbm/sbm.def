@@ -1,0 +1,21 @@
+Bootstrap: docker
+From: python:3.8.0
+
+%labels
+    Creator polaya07
+    This is the application container for parallel sbm of the SOMOSPIE framework
+
+%setup
+    mkdir -p ${SINGULARITY_ROOTFS}/train
+    mkdir -p ${SINGULARITY_ROOTFS}/eval
+    mkdir -p ${SINGULARITY_ROOTFS}/predictions
+
+%files
+    ../../use-cases/tmp_somospie/modeling/sbm/sbm.py /sbm.py
+    ../../use-cases/tmp_somospie/modeling/sbm/surrogate_based_model.py /surrogate_based_model.py
+
+%post
+    pip3 install pandas numpy scipy matplotlib
+
+%runscript
+    python3 /sbm.py -t /train/train.csv -e /eval/eval.csv -o /predictions/predictions.csv
