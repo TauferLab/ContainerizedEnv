@@ -105,4 +105,8 @@ Project Advisors:
 
 ## Copyright and license
 
+This software is distributed under terms of the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) with LLVM Exceptions.
+
+See [LICENSE](https://github.com/TauferLab/ContainerizedEnv/blob/main/LICENSE) for more details.
+
 Copyright (c) 2022, Global Computing Lab
