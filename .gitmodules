@@ -1,0 +1,3 @@
+[submodule "SOMOSPIE"]
+	path = use-cases/SOMOSPIE
+	url = https://github.com/TauferLab/SOMOSPIE
