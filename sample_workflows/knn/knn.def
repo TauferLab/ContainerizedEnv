@@ -6,17 +6,15 @@ From: python:3.8.0
     This is the application container for parallel knn of the SOMOSPIE framework
 
 %setup
-    mkdir -p ${SINGULARITY_ROOTFS}/train
-    mkdir -p ${SINGULARITY_ROOTFS}/eval
-    mkdir -p ${SINGULARITY_ROOTFS}/predictions
+    mkdir -p ${APPTAINER_ROOTFS}/train
+    mkdir -p ${APPTAINER_ROOTFS}/eval
+    mkdir -p ${APPTAINER_ROOTFS}/predictions
 
 %files
-    ../../use-cases/tmp_somospie/modeling/knn/knn_train.py /knn_train.py
-    ../../use-cases/tmp_somospie/modeling/knn/knn_predict.py /knn_predict.py
+    ../../use-cases/SOMOSPIE/SOMOSPIE/code/modeling/knn.py /knn.py
 
 %post
     pip3 install pandas numpy scikit-learn
 
 %runscript
-    python3 /knn_train.py -t /train/train.csv -m /predictions/ -maxK 16
-    python3 /knn_predict.py -m /predictions/ -e /eval/eval.csv -o /predictions/predictions.csv
+    python3 /knn.py -t /train/train.csv -e /eval/eval.csv -o /predictions/predictions.csv -k 16

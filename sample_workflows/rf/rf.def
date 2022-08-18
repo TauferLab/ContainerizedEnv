@@ -6,17 +6,15 @@ From: python:3.8.0
     This is the application container for parallel rf of the SOMOSPIE framework
 
 %setup
-    mkdir -p ${SINGULARITY_ROOTFS}/train
-    mkdir -p ${SINGULARITY_ROOTFS}/eval
-    mkdir -p ${SINGULARITY_ROOTFS}/predictions
+    mkdir -p ${APPTAINER_ROOTFS}/train
+    mkdir -p ${APPTAINER_ROOTFS}/eval
+    mkdir -p ${APPTAINER_ROOTFS}/predictions
 
 %files
-    ../../use-cases/tmp_somospie/modeling/rf/rf_train.py /rf_train.py
-    ../../use-cases/tmp_somospie/modeling/rf/rf_predict.py /rf_predict.py
+    ../../use-cases/SOMOSPIE/SOMOSPIE/code/modeling/rf.py /rf.py
 
 %post
     pip3 install pandas numpy scikit-learn
 
 %runscript
-    python3 /rf_train.py -t /train/train.csv -m /predictions/
-    python3 /rf_predict.py -m /predictions/ -e /eval/eval.csv -o /predictions/predictions.csv
+    python3 /rf.py -t /train/train.csv -e /eval/eval.csv -o /predictions/predictions.csv

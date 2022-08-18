@@ -6,16 +6,15 @@ From: python:3.8.0
     This is the application container for parallel sbm of the SOMOSPIE framework
 
 %setup
-    mkdir -p ${SINGULARITY_ROOTFS}/train
-    mkdir -p ${SINGULARITY_ROOTFS}/eval
-    mkdir -p ${SINGULARITY_ROOTFS}/predictions
+    mkdir -p ${APPTAINER_ROOTFS}/train
+    mkdir -p ${APPTAINER_ROOTFS}/eval
+    mkdir -p ${APPTAINER_ROOTFS}/predictions
 
 %files
-    ../../use-cases/tmp_somospie/modeling/sbm/sbm.py /sbm.py
-    ../../use-cases/tmp_somospie/modeling/sbm/surrogate_based_model.py /surrogate_based_model.py
+    ../../use-cases/SOMOSPIE/SOMOSPIE/code/modeling/hyppo.py /hyypo.py
 
 %post
-    pip3 install pandas numpy scipy matplotlib
+    pip3 install numpy scipy sklearn
 
 %runscript
-    python3 /sbm.py -t /train/train.csv -e /eval/eval.csv -o /predictions/predictions.csv
+    python3 /hyypo.py -t /train/train.csv -e /eval/eval.csv -o /predictions/predictions.csv -m HYPPO -k 2
