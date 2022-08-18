@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.8.0
+From: python:3.8.10
 
 %labels
     Creator polaya07
