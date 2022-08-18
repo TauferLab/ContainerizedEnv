@@ -1,3 +1,6 @@
 [submodule "SOMOSPIE"]
 	path = use-cases/SOMOSPIE
 	url = https://github.com/TauferLab/SOMOSPIE
+[submodule "use-cases/SOMOSPIE"]
+	path = use-cases/SOMOSPIE
+	url = https://github.com/TauferLab/SOMOSPIE.git
