@@ -1,14 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
-	"time"
 
+	"github.com/apptainer/sif/v2/pkg/sif"
 	uuid "github.com/satori/go.uuid"
-	"github.com/sylabs/sif/pkg/sif"
 )
 
 func (cfg workflowConfig) createWorkflow() error {
@@ -42,7 +42,7 @@ func (cfg workflowConfig) createWorkflow() error {
 
 func (cfg containerConfig) buildAppContainer() error {
 	if err := exec.Command(
-		"singularity",
+		"apptainer",
 		"build",
 		"--fakeroot",
 		"--force",
@@ -124,36 +124,14 @@ func (cfg containerConfig) createInputContainer() error {
 		return err
 	}
 
-	inputSifDesc := sif.DescriptorInput{
-		Datatype: sif.DataPartition,
-		Groupid:  sif.DescrDefaultGroup,
-		Link:     sif.DescrUnusedLink,
-		Data:     inputPartition,
-		Fname:    cfg.Name,
-		Size:     int64(len(inputPartition)),
-	}
-
-	if err := inputSifDesc.SetPartExtra(sif.FsExt3, 3, sif.GetSIFArch("amd64")); err != nil {
-		return err
-	}
-
-	inputContainerUUID, err := uuid.NewV4()
-	if err != nil {
-		return fmt.Errorf("error creating a uuid for the input container: %v", err)
-	}
-
-	inputContainerInfo := sif.CreateInfo{
-		Pathname: cfg.Name + ".sif",
-		ID:       inputContainerUUID,
-		InputDescr: []sif.DescriptorInput{
-			inputSifDesc,
-		},
-	}
-
-	_, err = sif.CreateContainer(inputContainerInfo)
+	inputSifDesc, err := sif.NewDescriptorInput(sif.DataPartition, bytes.NewReader(inputPartition), sif.OptObjectName(cfg.Name), sif.OptPartitionMetadata(sif.FsExt3, sif.PartData, "amd64"))
 	if err != nil {
 		return err
 	}
+
+	inputContainerUUID := uuid.NewV4()
+
+	sif.CreateContainerAtPath(cfg.Name+".sif", sif.OptCreateWithID(inputContainerUUID.String()), sif.OptCreateWithDescriptors(inputSifDesc))
 
 	if err := addStaticMetadata(cfg.Name, true); err != nil {
 		return fmt.Errorf("error adding static metadata to input container: %v", err)
@@ -221,35 +199,14 @@ func (cfg containerConfig) createOutputContainer() error {
 		return err
 	}
 
-	outputSifDesc := sif.DescriptorInput{
-		Datatype: sif.DataPartition,
-		Groupid:  sif.DescrDefaultGroup,
-		Link:     sif.DescrUnusedLink,
-		Data:     outputPartition,
-		Fname:    cfg.Name,
-		Size:     int64(len(outputPartition)),
-	}
-
-	if err := outputSifDesc.SetPartExtra(sif.FsExt3, 3, sif.GetSIFArch("amd64")); err != nil {
-		return err
-	}
-
-	outputContainerUUID, err := uuid.NewV4()
-	if err != nil {
-		return fmt.Errorf("error creating a uuid for the output container: %v", err)
-	}
-
-	outputContainerInfo := sif.CreateInfo{
-		Pathname: cfg.Name + ".sif",
-		ID:       outputContainerUUID,
-		InputDescr: []sif.DescriptorInput{
-			outputSifDesc,
-		},
-	}
-	_, err = sif.CreateContainer(outputContainerInfo)
+	outputSifDesc, err := sif.NewDescriptorInput(sif.DataPartition, bytes.NewReader(outputPartition), sif.OptObjectName(cfg.Name), sif.OptPartitionMetadata(sif.FsExt3, sif.PartData, "amd64"))
 	if err != nil {
 		return err
 	}
+
+	outputContainerUUID := uuid.NewV4()
+
+	sif.CreateContainerAtPath(cfg.Name+".sif", sif.OptCreateWithID(outputContainerUUID.String()), sif.OptCreateWithDescriptors(outputSifDesc))
 
 	if err := exec.Command(
 		"rm",
@@ -264,15 +221,20 @@ func (cfg containerConfig) createOutputContainer() error {
 func addStaticMetadata(name string, isInputContainer bool) error {
 	path := name + ".sif"
 
-	containerImg, err := sif.LoadContainer(path, false)
+	containerImg, err := sif.LoadContainerFromPath(path, sif.OptLoadWithFlag(os.O_RDWR))
+	if err != nil {
+		return err
+	}
+
+	containerUuid, err := uuid.FromString(containerImg.ID())
 	if err != nil {
 		return err
 	}
 
 	metadata := containerMetadata{
-		UUID:             containerImg.Header.ID,
+		UUID:             containerUuid,
 		Name:             name,
-		CreationTime:     time.Unix(containerImg.Header.Ctime, 0),
+		CreationTime:     containerImg.CreatedAt(),
 		ExecutionCommand: "no operation",
 		RecordTrail:      nil,
 	}
@@ -284,7 +246,7 @@ func addStaticMetadata(name string, isInputContainer bool) error {
 				UUID uuid.UUID
 			}{
 				Name: name,
-				UUID: containerImg.Header.ID,
+				UUID: containerUuid,
 			},
 			InputContainers:      nil,
 			ApplicationContainer: nil,
@@ -296,13 +258,9 @@ func addStaticMetadata(name string, isInputContainer bool) error {
 		return err
 	}
 
-	applicationSifMetadata := sif.DescriptorInput{
-		Datatype: sif.DataGenericJSON,
-		Groupid:  sif.DescrDefaultGroup,
-		Link:     sif.DescrUnusedLink,
-		Data:     metadataJSON,
-		Fname:    "metadata",
-		Size:     int64(len(metadataJSON)),
+	applicationSifMetadata, err := sif.NewDescriptorInput(sif.DataGenericJSON, bytes.NewReader(metadataJSON), sif.OptObjectName("metadata"))
+	if err != nil {
+		return err
 	}
 
 	if err := containerImg.AddObject(applicationSifMetadata); err != nil {

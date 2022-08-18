@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/apptainer/apptainer/pkg/cmdline"
 	"github.com/spf13/cobra"
-	"github.com/sylabs/singularity/pkg/cmdline"
 )
 
 func callbackRegisterCmd(manager *cmdline.CommandManager) {
@@ -47,7 +47,7 @@ func workflowEntryPoint(createFlag, runFlag bool, args []string) error {
 			return fmt.Errorf("Could not execute workflow: %v", err)
 		}
 	} else {
-		return fmt.Errorf("Must use at least one flag.\nrun `singularity workflow --help` for more info")
+		return fmt.Errorf("Must use at least one flag.\nrun `apptainer workflow --help` for more info")
 	}
 
 	return nil

@@ -1,15 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
+	"github.com/apptainer/sif/v2/pkg/sif"
 	uuid "github.com/satori/go.uuid"
-	"github.com/sylabs/sif/pkg/sif"
 )
 
 func execWorkflow(path string) error {
@@ -47,7 +47,7 @@ func (cfg workflowConfig) annotateOutputContainer() error {
 		return err
 	}
 
-	outputContainerImg, err := sif.LoadContainer(path, false)
+	outputContainerImg, err := sif.LoadContainerFromPath(path, sif.OptLoadWithFlag(os.O_RDWR))
 	if err != nil {
 		return err
 	}
@@ -57,10 +57,15 @@ func (cfg workflowConfig) annotateOutputContainer() error {
 		return err
 	}
 
+	containerUuid, err := uuid.FromString(outputContainerImg.ID())
+	if err != nil {
+		return err
+	}
+
 	metadata := containerMetadata{
-		UUID:             outputContainerImg.Header.ID,
+		UUID:             containerUuid,
 		Name:             cfg.OutputContainer.Name,
-		CreationTime:     time.Unix(outputContainerImg.Header.Ctime, 0),
+		CreationTime:     outputContainerImg.CreatedAt(),
 		ExecutionCommand: cmd,
 		RecordTrail:      &rt,
 	}
@@ -70,13 +75,9 @@ func (cfg workflowConfig) annotateOutputContainer() error {
 		return err
 	}
 
-	metadataDescription := sif.DescriptorInput{
-		Datatype: sif.DataGenericJSON,
-		Groupid:  sif.DescrDefaultGroup,
-		Link:     sif.DescrUnusedLink,
-		Data:     metadataJSON,
-		Fname:    "metadata.json",
-		Size:     int64(len(metadataJSON)),
+	metadataDescription, err := sif.NewDescriptorInput(sif.DataGenericJSON, bytes.NewReader(metadataJSON), sif.OptObjectName("metadata.json"))
+	if err != nil {
+		return err
 	}
 
 	if err := outputContainerImg.AddObject(metadataDescription); err != nil {
@@ -93,7 +94,7 @@ func (cfg workflowConfig) annotateOutputContainer() error {
 func (cfg workflowConfig) createRunCommand() string {
 	var workflowCommand string
 
-	workflowCommand += "singularity run"
+	workflowCommand += "apptainer run"
 	workflowCommand += " "
 
 	for _, inputContainer := range cfg.InputContainer {
@@ -130,47 +131,65 @@ func (cfg workflowConfig) getRecordTrail() (recordTrail, error) {
 	}, 0)
 	for _, inputContainer := range cfg.InputContainer {
 		name := inputContainer.Name
-		img, err := sif.LoadContainer(name+".sif", true)
+		img, err := sif.LoadContainerFromPath(name+".sif", sif.OptLoadWithFlag(os.O_RDONLY))
 		if err != nil {
 			return rt, err
 		}
+
+		containerUuid, err := uuid.FromString(img.ID())
+		if err != nil {
+			return rt, err
+		}
+
 		rt.InputContainers = append(rt.InputContainers, struct {
 			Name string
 			UUID uuid.UUID
 		}{
 			Name: name,
-			UUID: img.Header.ID,
+			UUID: containerUuid,
 		})
 		if err := img.UnloadContainer(); err != nil {
 			return rt, err
 		}
 	}
 
-	applicationContainerImg, err := sif.LoadContainer(cfg.ApplicationContainer.Name+".sif", true)
+	applicationContainerImg, err := sif.LoadContainerFromPath(cfg.ApplicationContainer.Name+".sif", sif.OptLoadWithFlag(os.O_RDONLY))
 	if err != nil {
 		return rt, err
 	}
+
+	containerUuid, err := uuid.FromString(applicationContainerImg.ID())
+	if err != nil {
+		return rt, err
+	}
+
 	rt.ApplicationContainer = &struct {
 		Name string
 		UUID uuid.UUID
 	}{
 		Name: cfg.ApplicationContainer.Name,
-		UUID: applicationContainerImg.Header.ID,
+		UUID: containerUuid,
 	}
 	if err := applicationContainerImg.UnloadContainer(); err != nil {
 		return rt, err
 	}
 
-	outputContainerImg, err := sif.LoadContainer(cfg.OutputContainer.Name+".sif", true)
+	outputContainerImg, err := sif.LoadContainerFromPath(cfg.OutputContainer.Name+".sif", sif.OptLoadWithFlag(os.O_RDONLY))
 	if err != nil {
 		return rt, err
 	}
+
+	containerUuid, err = uuid.FromString(applicationContainerImg.ID())
+	if err != nil {
+		return rt, err
+	}
+
 	rt.OutputContainer = &struct {
 		Name string
 		UUID uuid.UUID
 	}{
 		Name: cfg.OutputContainer.Name,
-		UUID: outputContainerImg.Header.ID,
+		UUID: containerUuid,
 	}
 	if err := outputContainerImg.UnloadContainer(); err != nil {
 		return rt, err
@@ -182,20 +201,21 @@ func (cfg workflowConfig) getRecordTrail() (recordTrail, error) {
 func (cfg workflowConfig) getRunscript() (string, error) {
 	command := ""
 
-	fimg, err := sif.LoadContainer(cfg.ApplicationContainer.Name+".sif", true)
+	fimg, err := sif.LoadContainerFromPath(cfg.ApplicationContainer.Name+".sif", sif.OptLoadWithFlag(os.O_RDONLY))
 	if err != nil {
 		return command, err
 	}
 
-	descriptions, _, err := fimg.GetFromDescr(sif.Descriptor{
-		Datatype: sif.DataDeffile,
-	})
+	descriptions, err := fimg.GetDescriptors(sif.WithDataType(sif.DataDeffile))
 	if err != nil {
 		return "", fmt.Errorf("Could not retrive container descriptions: %v", err)
 	}
 
 	for _, descriptor := range descriptions {
-		defFile := descriptor.GetData(&fimg)
+		defFile, err := descriptor.GetData()
+		if err != nil {
+			return command, err
+		}
 		runscript := extractRunscript(string(defFile))
 		command += runscript
 		command += "\n"
