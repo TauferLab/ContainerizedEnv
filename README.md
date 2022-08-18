@@ -25,7 +25,7 @@ There are two main components to install to run our environment: 1) Apptainer an
 
 2. Clone our repository
     ```
-    git clone --recurse-submodules https://github.com/TauferLab/Src_ContainerizedEnv
+    git clone --recurse-submodules https://github.com/TauferLab/ContainerizedEnv
     ```
 3. Install the metadata plugin  
     ```
