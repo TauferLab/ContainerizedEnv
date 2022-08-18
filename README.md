@@ -1,4 +1,4 @@
-# Traceability and Reproducibility through Individual Containerization (TRIC) using Singularity Technology  
+# Traceability and Reproducibility through Individual Containerization (TRIC) 
 
 This repository contains a computational containerized environment that automatically creates a workflow execution's record trail and invisibly attaches it to the workflow's output, enabling data traceability and results explainability.
 
@@ -18,18 +18,18 @@ This document is organized in the following order:
 * [Copyright and license information](#copyright-and-license)
 
 ## Installation 
-There are two main components to install to run our environment: 1) Singularity and the plugins for the execution of the workflow and automatic collection of the metadata; and 2) a Jupyter Notebook for the interface that enables the visualization and study of the metadata to understand the data lineage and the computational methods.
+There are two main components to install to run our environment: 1) Apptainer and the plugins for the execution of the workflow and automatic collection of the metadata; and 2) a Jupyter Notebook for the interface that enables the visualization and study of the metadata to understand the data lineage and the computational methods.
 
-### Singularity and plugins for containerized workflow creation and execution 
-1. Install Singularity by following these [instructions.](https://github.com/apptainer/singularity/blob/master/INSTALL.md) A version greater than 3.5 is required to enable the plugins and zero-copy data transfer between containers.   
+### Apptainer and plugins for containerized workflow creation and execution 
+1. Install Apptainer by following these [instructions.](https://github.com/apptainer/apptainer/blob/main/INSTALL.md) A version greater than 3.5 is required to enable the plugins and zero-copy data transfer between containers.   
 
 2. Clone our repository
     ```
-    git clone https://github.com/TauferLab/Src_ContainerizedEnv
+    git clone --recurse-submodules https://github.com/TauferLab/Src_ContainerizedEnv
     ```
 3. Install the metadata plugin  
     ```
-    singularity plugin compile plugin/.  
+    apptainer plugin compile plugin/.  
     sudo plugin install plugin/plugin.sif 
     ```
 ### Interface for metadata analysis 
@@ -62,16 +62,16 @@ Once you have your environment installed, you can run `jupyter notebook` and run
     * For rf:  `cd sample_workflows/rf`  
 
 2. Initilize the workflow containers  
-    * For knn: `singularity workflow --create knn_workflow.json`  
-    * For sbm: `singularity workflow --create sbm_workflow.json`  
-    * For rf:  `singularity workflow --create rf_workflow.json`  
-    * Or create your own workflow: `singularity workflow --create`
+    * For knn: `apptainer workflow --create knn_workflow.json`  
+    * For sbm: `apptainer workflow --create sbm_workflow.json`  
+    * For rf:  `apptainer workflow --create rf_workflow.json`  
+    * Or create your own workflow: `apptainer workflow --create`
 
 3. Run the workflow  
-    * For knn: `singularity workflow --run knn_workflow.json`  
-    * For sbm: `singularity workflow --run sbm_workflow.json`  
-    * For rf:  `singularity workflow --run rf_workflow.json`  
-    * Or run your own workflow: `singularity workflow --run your_workflow_name.json`
+    * For knn: `apptainer workflow --run knn_workflow.json`  
+    * For sbm: `apptainer workflow --run sbm_workflow.json`  
+    * For rf:  `apptainer workflow --run rf_workflow.json`  
+    * Or run your own workflow: `apptainer workflow --run your_workflow_name.json`
 
 4. Explore the metadata using the metadata interface  
 
@@ -85,11 +85,11 @@ Once you have your environment installed, you can run `jupyter notebook` and run
 2. Use the metadata interface  
     * Run `jupyter notebook` and select the `interface/metadata-interface.ipynb` notebook
     * Execute the first cell to import all libraries and packages
-    * Execute the second cell to select one file or a directory with metadata files. For example, select `ContainerizedEnv/sample_workflows/knn/metadata/` 
+    * Execute the second cell to select one file or a directory with metadata files. For example, select `Src_ContainerizedEnv/sample_workflows/knn/metadata/` 
     * Execute the third cell to build a graph representation of the workflow
     * Execute the fourth cell to open a visualizer where you can interact with each of the components and observe the metadata 
- 
-## Additional project details
+
+ ## Additional project details
  
 ### Acknowledgments
 
@@ -108,9 +108,5 @@ Project Advisors:
 
 
 ## Copyright and license
-
-This software is distributed under terms of the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) with LLVM Exceptions.
-
-See [LICENSE](https://github.com/TauferLab/ContainerizedEnv/blob/main/LICENSE) for more details.
 
 Copyright (c) 2022, Global Computing Lab
