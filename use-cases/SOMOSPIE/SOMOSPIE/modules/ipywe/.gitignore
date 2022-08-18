@@ -1,8 +1,0 @@
-*.pyc
-*~
-.ipynb_checkpoints
-node_modules/
-ipywe.egg-info/
-ipywe/static/
-js/dist/
-.idea*
